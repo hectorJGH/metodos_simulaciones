@@ -1,3 +1,6 @@
 set term png
 set out "graph.png"
-plot "data.txt" w l
+
+F(x) = sqrt(25-x*x)
+
+plot "data.txt" w lp, F(x) w l
