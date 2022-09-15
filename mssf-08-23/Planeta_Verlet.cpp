@@ -10,13 +10,13 @@ class Cuerpo;
 
 class Cuerpo{
 private:
-    vector3D r,rold, V, F;
+    vector3D r,rold, omega, tau;
     double m,R;
 public:
     void Inicie(double x0,double y0,double z0,
-                    double Vx0,double Vy0, double Vz0,
+                    double omegax0,double omegay0, double omegaz0,
                     double m0,double R0);
-    void CalculeFuerza(void);
+    void CalculeTorque(void);
     void Arranque(double dt);
     void Muevase(double dt);
     double Getx(void){return r.x();}
@@ -24,29 +24,29 @@ public:
 };
 
 void Cuerpo::Inicie(double x0,double y0,double z0,
-                    double Vx0,double Vy0, double Vz0,
+                    double omegax0,double omegay0, double omegaz0,
                     double m0,double R0){
-    r.load(x0,y0,z0); V.load(Vx0,Vy0,Vz0);
+    r.load(x0,y0,z0); omega.load(omegax0,omegay0,omegaz0);
 }
 
-void Cuerpo::CalculeFuerza(void){
+void Cuerpo::CalculeTorque(void){
     double normF = -GM * m/r.norm2();
-    F=r*normF/r.norm();
+    tau=r*normF/r.norm();
 }
 
 void Cuerpo::Arranque(double dt){
     rold=r;
-    r=r + V*dt + F*(dt*dt/(2*m));
+    r=r + omega*dt + tau*(dt*dt/(2*m));
 }
 
 void Cuerpo::Muevase(double dt){
     vector3D rnew;
-    rnew=2*r-rold + F*(dt*dt/m); V = (rnew - rold)/(2*dt); 
+    rnew=2*r-rold + tau*(dt*dt/m); omega = (rnew - rold)/(2*dt); 
     rold=r;r=rnew;
 }
 
 int main(){
-    Cuerpo Planeta;
+    Cuerpo Pendulo;
     double t, dt=0.1;
     double omega, r0=5, v0, T,m0=1;
     
@@ -54,16 +54,16 @@ int main(){
     v0= omega*r0;
     T=2*M_PI/omega;
 
-    //----------( x0, y0, Vx0, Vy0, m0, R0);
-    Planeta.Inicie( r0, 0, 0, 0, v0, 0 , m0, 0.15);
-    Planeta.CalculeFuerza();
-    Planeta.Arranque(dt);
+    //----------( x0, y0, omegax0, omegay0, m0, R0);
+    Pendulo.Inicie( r0, 0, 0, 0, v0, 0 , m0, 0.15);
+    Pendulo.CalculeTorque();
+    Pendulo.Arranque(dt);
 
 
     for(t=0; t<T; t+=dt){
-        cout<<Planeta.Getx()<<" "<<Planeta.Gety()<<endl;
-        Planeta.CalculeFuerza();
-        Planeta.Muevase(dt);
+        cout<<Pendulo.Getx()<<" "<<Pendulo.Gety()<<endl;
+        Pendulo.CalculeTorque();
+        Pendulo.Muevase(dt);
     }
     return 0;
 }

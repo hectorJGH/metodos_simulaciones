@@ -8,13 +8,13 @@ double f(double t, double x){
 }
 
 void UnPasoDeRungeKutta4(double & t, double & x, double dt){
-    double dx1, dx2, dx3, dx4;
-    dx1= dt* f(t,x);
-    dx2 = dt* f(t+dt/2,x+dx1/2);
-    dx3 = dt* f(t+dt/2,x+dx2/2);
+    double ds, di, dx3, dx4;
+    ds= dt* f(t,x);
+    di = dt* f(t+dt/2,x+ds/2);
+    dx3 = dt* f(t+dt/2,x+di/2);
     dx4 = dt* f(t+dt/2,x+dx3);
 
-    x+= (dx1 + 2*dx2 + 2*dx3 + dx4)/6;
+    x+= (ds + 2*di + 2*dx3 + dx4)/6;
     t+=dt;
 }
 

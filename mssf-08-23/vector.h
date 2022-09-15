@@ -1,8 +1,8 @@
 //A C++ fast and lightweight 3D vector library.
 //Optimized to be as fast as possible maintaining great usability.
 /* 
- * This file is part of the Vector3D distribution (https://github.com/cdelv/Vector3D).
- * Copyright (c) 2022 Carlos Andres del Valle.
+ * This file is part of the omegaector3D distribution (https://github.com/cdelv/omegaector3D).
+ * Copyright (c) 2022 Carlos Andres del omegaalle.
  * 
  * This program is free software: you can redistribute it and/or modify  
  * it under the terms of the GNU General Public License as published by  
@@ -34,7 +34,7 @@ class vector3D{
   //Show the vector
   void show(void);
   //-------------------------
-  //Vectorial operators
+  //omegaectorial operators
   //-------------------------
   //Equal
   void operator= (vector3D v2);
@@ -73,7 +73,7 @@ void vector3D::show(void){
   std::cout << "(" <<X<< "," <<Y<< "," <<Z<< ")\n";
 }
 //-------------------------
-//Vectorial operators
+//omegaectorial operators
 //-------------------------
 //Equal
 void vector3D::operator=(vector3D v2){

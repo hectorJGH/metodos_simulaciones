@@ -8,28 +8,30 @@ using namespace std;
 const double G=1;
 const int N=2;
 
-//Constantes Forest-Roth
-const double Theta=1/(2-pow(2.0,1.0/3));
-const double ThetaU2 = Theta/2;
-const double UmThetaU2 = (1 - Theta)/2;
-const double Um2Theta = 1-2*Theta;
+//Constantes PEFRL
+const double Zeta=0.1786178958448091e00;
+const double Lambda=-0.2123418310626054e00;
+const double Chi=-0.6626458266981849e-1;
+
+const double Coeficiente1=(1-2*Lambda)/2;
+const double Coeficiente2=1-2*(Chi+Zeta);
 
 class Cuerpo;
 class Colisionador;
 
 class Cuerpo{
 private:
-    vector3D r,rold, V, F;
+    vector3D r,rold, omega, tau;
     double m,R;
 public:
     void Inicie(double x0,double y0,double z0,
-                    double Vx0,double Vy0, double Vz0,
+                    double omegax0,double omegay0, double omegaz0,
                     double m0,double R0);
-    void SumeFuerza(vector3D F0);
-    void BorreFuerza(void);
+    void SumeTorque(vector3D F0);
+    void BorreTorque(void);
     void Arranque(double dt);
-    void Mueva_r(double dt, double coef);
-    void Mueva_V(double dt, double coef);
+    void Mueva_theta(double dt, double coef);
+    void Mueva_omega(double dt, double coef);
     double Getx(void){return r.x();}
     double Gety(void){return r.y();}
     double Getz(void){return r.z();}
@@ -37,93 +39,98 @@ public:
 };
 
 void Cuerpo::Inicie(double x0,double y0,double z0,
-                    double Vx0,double Vy0, double Vz0,
+                    double omegax0,double omegay0, double omegaz0,
                     double m0,double R0){
-    r.load(x0,y0,z0); V.load(Vx0,Vy0,Vz0); m=m0; R=R0;
+    r.load(x0,y0,z0); omega.load(omegax0,omegay0,omegaz0); m=m0; R=R0;
 }
 
-void Cuerpo::SumeFuerza(vector3D F0){
-    F+=F0;
+void Cuerpo::SumeTorque(vector3D F0){
+    tau+=F0;
 }
-void Cuerpo::BorreFuerza(void){
-    F.load(0,0,0);
+void Cuerpo::BorreTorque(void){
+    tau.load(0.0,0.0,0.0);
 }
 
 
 void Cuerpo::Arranque(double dt){
-    V-=F*(dt/(2*m));
+    omega-=tau*(dt/(2*m));
 }
 
-void Cuerpo::Mueva_r(double dt, double coef){
-    r+= V*(dt*coef);
+void Cuerpo::Mueva_theta(double dt, double coef){
+    r+= omega*(dt*coef);
 }
-void Cuerpo::Mueva_V(double dt, double coef){
-    V+= F*(dt*coef/m);
+void Cuerpo::Mueva_omega(double dt, double coef){
+    omega+= tau*(dt*coef/m);
 }
 
 //----------Clase Colisionador----------
 class Colisionador{
 private:
 public:
-    void CalculeFuerzas(Cuerpo * Planeta);
-    void CalculeFuerzaEntre(Cuerpo & Planeta1, Cuerpo & Planeta);
+    void CalculeTorques(Cuerpo * Pendulo);
+    void CalculeTorqueEntre(Cuerpo & Pendulo1, Cuerpo & Pendulo2);
     ///Se ponen referencias & para que el objeto cambie con la función
+    // * Es para aplicar a los vectores
 };
 
-void Colisionador::CalculeFuerzas(Cuerpo * Planeta){
+void Colisionador::CalculeTorques(Cuerpo * Pendulo){
     int i, j;
-    //Borrar fuerzas
+    //Borrar Torques
     for(i=0;i<N; i++)
-    Planeta[i].BorreFuerza();
-    //Calcular las fuerzas entre todas las parejas
+    Pendulo[i].BorreTorque();
+    //Calcular las Torques entre todas las parejas
     for (i=0; i<N;i++)
         for(j=i+1;j<N;j++)
-            CalculeFuerzaEntre(Planeta[i],Planeta[j]);
+            CalculeTorqueEntre(Pendulo[i],Pendulo[j]);
 }
 
-void Colisionador::CalculeFuerzaEntre(Cuerpo & Planeta1, Cuerpo & Planeta2){
-    vector3D r21,n,F1; double d, F;
-    r21=Planeta2.r-Planeta1.r; d = r21.norm();
+void Colisionador::CalculeTorqueEntre(Cuerpo & Pendulo1, Cuerpo & Pendulo2){
+    vector3D r21,n,ds_dt; double d, tau;
+    r21=Pendulo2.r-Pendulo1.r; d = r21.norm();
     n= r21/d;
-    F = G * Planeta1.m * Planeta2.m * pow(d, -1.5);
-    F1=n*F; Planeta1.SumeFuerza(F1);Planeta1.SumeFuerza(F1*(-1));
+    tau = G * Pendulo1.m * Pendulo2.m * pow(d, -2.0);
+    ds_dt=n*tau; Pendulo1.SumeTorque(ds_dt);Pendulo2.SumeTorque(ds_dt*(-1));
 }
 
 
 int main(){
-    Cuerpo Planeta[N];
+    Cuerpo Pendulo[N];
     Colisionador Newton;
     double m0=10, m1=1, r=11;
-    double M=m0+m1, x0 = -m1*r/M, x1= m0*r/M;
-    double omega=sqrt(G*M/(r*r*r)), T= 2*M_PI/omega, V0= omega*x0, V1=omega*x1;
+    double M=m0+m1, x0 = -m1*r/M, s= m0*r/M;
+    double omega=sqrt(G*M/(r*r*r)), T= 2*M_PI/omega, omega0= omega*x0, omega1=omega*s;
     double t, dt=0.1;
     int i;
 
-    //----------( x0, y0, z0, Vx0, Vy0, Vz0, m0, R0);
-    Planeta[0].Inicie( x0, 0, 0, 0, V0, 0 , m0, 1);
-    Planeta[1].Inicie( x1, 0, 0, 0, V1, 0 , m1, 0.15);
+    //----------( x0, y0, z0, omegax0, omegay0, omegaz0, m0, R0);
+    Pendulo[0].Inicie( x0, 0, 0, 0, omega0, 0 , m0, 1);
+    Pendulo[1].Inicie( s, 0, 0, 0, omega1, 0 , m1, 0.15);
 
 
     for(t=0; t<T; t+=dt){
-        cout<<Planeta[1].Getx()<<" "<<Planeta[1].Gety()<<endl;
+        cout<<Pendulo[1].Getx()<<" "<<Pendulo[1].Gety()<<endl;
         // Mover por Forest-Roth
-        for(i=0; i<N; i++) Planeta[i].Mueva_r(dt, ThetaU2);
-        Newton.CalculeFuerzas(Planeta);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_theta(dt,Zeta);
 
-        for(i=0; i<N; i++) Planeta[i].Mueva_V(dt, Theta);
+        Newton.CalculeTorques(Pendulo);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_omega(dt, Coeficiente1);
 
-        for(i=0; i<N; i++) Planeta[i].Mueva_r(dt,UmThetaU2);
-        Newton.CalculeFuerzas(Planeta);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_theta(dt,Chi);
 
-        for(i=0; i<N; i++) Planeta[i].Mueva_V(dt, Um2Theta);
+        Newton.CalculeTorques(Pendulo);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_omega(dt, Lambda);
 
-        for(i=0; i<N; i++) Planeta[i].Mueva_r(dt,UmThetaU2);
-        Newton.CalculeFuerzas(Planeta);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_theta(dt,Coeficiente2);
 
+        Newton.CalculeTorques(Pendulo);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_omega(dt, Lambda);
 
-        for(i=0; i<N; i++) Planeta[i].Mueva_V(dt, Theta);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_theta(dt,Chi);
 
-        for(i=0; i<N; i++) Planeta[i].Mueva_r(dt, ThetaU2);
+        Newton.CalculeTorques(Pendulo);
+        for(i=0; i<N; i++) Pendulo[i].Mueva_omega(dt, Coeficiente1);
+
+        for(i=0; i<N; i++) Pendulo[i].Mueva_theta(dt,Zeta);
     }
     return 0;
 }

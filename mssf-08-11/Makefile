@@ -1,9 +1,9 @@
-planeta.x: Planeta.cpp
+Pendulo.x: Pendulo.cpp
 	g++ -g -fsanitize=address -fsanitize=undefined -fsanitize=leak $< -o $@
 
-planeta.txt: Planeta.x
+Pendulo.txt: Pendulo.x
 	$< > $@
 
 orbita.png
 
-#Vector Librry https://github.com/cdelv/Vector3D
+#omegaector Librry https://github.com/cdelv/omegaector3D

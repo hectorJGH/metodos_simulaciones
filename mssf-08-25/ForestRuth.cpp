@@ -17,45 +17,45 @@ class Cuerpo;
 
 class Cuerpo{
 private:
-    vector3D r,rold, V, F;
+    vector3D r,rold, omega, tau;
     double m,R;
 public:
     void Inicie(double x0,double y0,double z0,
-                    double Vx0,double Vy0, double Vz0,
+                    double omegax0,double omegay0, double omegaz0,
                     double m0,double R0);
-    void CalculeFuerza(void);
+    void CalculeTorque(void);
     void Arranque(double dt);
-    void Mueva_r(double dt, double coef);
-    void Mueva_V(double dt, double coef);
+    void Mueva_theta(double dt, double coef);
+    void Mueva_omega(double dt, double coef);
     double Getx(void){return r.x();}
     double Gety(void){return r.y();}
     double Getz(void){return r.z();}
 };
 
 void Cuerpo::Inicie(double x0,double y0,double z0,
-                    double Vx0,double Vy0, double Vz0,
+                    double omegax0,double omegay0, double omegaz0,
                     double m0,double R0){
-    r.load(x0,y0,z0); V.load(Vx0,Vy0,Vz0); m=m0; R=R0;
+    r.load(x0,y0,z0); omega.load(omegax0,omegay0,omegaz0); m=m0; R=R0;
 }
 
-void Cuerpo::CalculeFuerza(void){
+void Cuerpo::CalculeTorque(void){
     double normF = -GM * m/r.norm2();
-    F=r*normF/r.norm();
+    tau=r*normF/r.norm();
 }
 
 void Cuerpo::Arranque(double dt){
-    V-=F*(dt/(2*m));
+    omega-=tau*(dt/(2*m));
 }
 
-void Cuerpo::Mueva_r(double dt, double coef){
-    r+= V*(dt*coef);
+void Cuerpo::Mueva_theta(double dt, double coef){
+    r+= omega*(dt*coef);
 }
-void Cuerpo::Mueva_V(double dt, double coef){
-    V+= F*(dt*coef/m);
+void Cuerpo::Mueva_omega(double dt, double coef){
+    omega+= tau*(dt*coef/m);
 }
 
 int main(){
-    Cuerpo Planeta;
+    Cuerpo Pendulo;
     double t, dt=0.1;
     double omega,  T;
     double r0=5, v0, m0=1;
@@ -68,30 +68,30 @@ int main(){
     //cout<<T<<" "<<v0<<" "<<omega<<endl;
     //cout<<" "<<Theta<<" "<<ThetaU2<<" "<<Um2Theta<<" "<<UmThetaU2<<endl;
 
-    //----------( x0, y0, Vx0, Vy0, m0, R0);
-    Planeta.Inicie( r0, 0, 0, 0, v0, 0 , m0, 0.15);
+    //----------( x0, y0, omegax0, omegay0, m0, R0);
+    Pendulo.Inicie( r0, 0, 0, 0, v0, 0 , m0, 0.15);
 
 
 
     for(t=0; t<T; t+=dt){
-        cout<<Planeta.Getx()<<" "<<Planeta.Gety()<<endl;
+        cout<<Pendulo.Getx()<<" "<<Pendulo.Gety()<<endl;
         // Mover por Forest-Roth
-        Planeta.Mueva_r(dt, ThetaU2);
-        Planeta.CalculeFuerza();
+        Pendulo.Mueva_theta(dt, ThetaU2);
+        Pendulo.CalculeTorque();
 
-        Planeta.Mueva_V(dt, Theta);
+        Pendulo.Mueva_omega(dt, Theta);
 
-        Planeta.Mueva_r(dt,UmThetaU2);
-        Planeta.CalculeFuerza();
+        Pendulo.Mueva_theta(dt,UmThetaU2);
+        Pendulo.CalculeTorque();
 
-        Planeta.Mueva_V(dt, Um2Theta);
+        Pendulo.Mueva_omega(dt, Um2Theta);
 
-        Planeta.Mueva_r(dt,UmThetaU2);
-        Planeta.CalculeFuerza();
+        Pendulo.Mueva_theta(dt,UmThetaU2);
+        Pendulo.CalculeTorque();
 
-        Planeta.Mueva_V(dt, Theta);
+        Pendulo.Mueva_omega(dt, Theta);
 
-        Planeta.Mueva_r(dt, ThetaU2);
+        Pendulo.Mueva_theta(dt, ThetaU2);
     }
     return 0;
 }

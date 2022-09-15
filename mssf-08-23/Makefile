@@ -1,7 +1,7 @@
-ex_euler.x: Planeta_Euler.cpp
+ex_euler.x: Pendulo_Euler.cpp
 	g++ -g -fsanitize=address -fsanitize=undefined -fsanitize=leak $< -o $@
 
-ex_verlet.x: Planeta_Verlet.cpp
+ex_verlet.x: Pendulo_omegaerlet.cpp
 	g++ -g -fsanitize=address -fsanitize=undefined -fsanitize=leak $< -o $@
 
 data_euler.txt: ex_euler.x

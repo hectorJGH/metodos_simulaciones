@@ -5,23 +5,23 @@ using namespace std;
 
 const double omega=3.0;
 
-double f1(double t, double x1, double x2){
-    return -omega*omega * x2;
+double ds_dt(double t, double s, double i){
+    return -omega*omega * i;
 }
 
 
-double f2(double t, double x1, double x2){
-    return x1;
+double di_dt(double t, double s, double i){
+    return s;
 }
 
-void UnPasoDeRungeKutta4(double & t, double & x1, double & x2, double dt){
-    double dx11, dx21, dx31, dx41, dx12, dx22, dx32, dx42;
-    dx11 = dt* f1(t,x1,x2);                       dx12 = dt* f2(t,x1,x2);
-    dx21 = dt* f1(t+dt/2,x1+dx11/2,x2+dx12/2);    dx22 = dt* f2(t+dt/2,x1+dx11/2,x2+dx12/2);
-    dx31 = dt* f1(t+dt/2,x1+dx21/2, x2+dx22/2);   dx32 = dt* f2(t+dt/2,x1+dx21/2, x2+dx22/2);
-    dx41 = dt* f1(t+dt/2,x1+dx31, x2+dx32);       dx42 = dt* f2(t+dt/2,x1+dx31, x2+dx32);
+void UnPasoDeRungeKutta4(double & t, double & s, double & i, double dt){
+    double ds1, ds2, ds3, ds4, di1, di2, di3, di4;
+    ds1 = dt* ds_dt(t,s,i);                       di1 = dt* di_dt(t,s,i);
+    ds2 = dt* ds_dt(t+dt/2,s+ds1/2,i+di1/2);    di2 = dt* di_dt(t+dt/2,s+ds1/2,i+di1/2);
+    ds3 = dt* ds_dt(t+dt/2,s+ds2/2, i+di2/2);   di3 = dt* di_dt(t+dt/2,s+ds2/2, i+di2/2);
+    ds4 = dt* ds_dt(t+dt/2,s+ds3, i+di3);       di4 = dt* di_dt(t+dt/2,s+ds3, i+di3);
 
-    x1+= (dx11 + 2*dx21 + 2*dx31 + dx41)/6;     x2+= (dx12 + 2*dx22 + 2*dx32 + dx42)/6;
+    s+= (ds1 + 2*ds2 + 2*ds3 + ds4)/6;     i+= (di1 + 2*di2 + 2*di3 + di4)/6;
     t+=dt;
 }
 
